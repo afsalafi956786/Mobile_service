@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    container_name: mobile_service
+    restart: always
+    ports:
+      - "5000:5000"  # ✅ Change from 3000 to 5000
+    env_file:
+      - server/.env  # ✅ Ensure .env is inside server/
+    depends_on:
+      - mongodb
+    volumes:
+      - ./server/uploads:/app/uploads  # ✅ Ensure uploads work inside container
+    dns:
+      - 8.8.8.8
+
+  mongodb:
+    image: mongo:latest
+    container_name: mobile_Service
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
