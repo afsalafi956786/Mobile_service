@@ -1,16 +1,15 @@
+import MODEL from '../../model/UserModels/model.js';
+import BRAND from '../../model/UserModels/brand.js';
 import USER from '../../model/UserModels/user.js'
-import DEPARTMENT from '../../model/UserModels/department.js'
 import BRANCH from '../../model/UserModels/branch.js';
-import POSITION from '../../model/UserModels/positions.js'
 import mongoose from 'mongoose'
 
 
 
-export const createDepartment = async (req,res,next)=>{
-    try{
+export const createBrand = async(req,res,next)=>{
+    try {
 
-
-        const { branchIds , departments  } = req.body;
+        const { branchIds , brands  } = req.body;
 
         const userId = req.user;
 
@@ -23,13 +22,13 @@ export const createDepartment = async (req,res,next)=>{
             return res.status(400).json({ message: "Branch IDs are required!" });
         }
 
-        if (!departments || !Array.isArray(departments) || departments.length === 0) {
-            return res.status(400).json({ message: "Departments are required!" });
+        if (!brands || !Array.isArray(brands) || brands.length === 0) {
+            return res.status(400).json({ message: "Brands are required!" });
         }
 
-      for(const department of departments){
-        if(!department.name){
-            return res.status(400).json({ message: "Department name is required!" });
+      for(const brand of brands){
+        if(!brand.name){
+            return res.status(400).json({ message: "Brand name is required!" });
         }
       }
 
@@ -50,28 +49,28 @@ export const createDepartment = async (req,res,next)=>{
         }
 
               // Collect all potential duplicates in one batch query
-              const departmentNames = departments.map((dept) => dept.name.trim().toLowerCase());
-              const existingDepartments = await DEPARTMENT.find({
-                  restaurantId: { $in: branchIds },
-                  name: { $in: departmentNames },
+              const brandNames = brands.map((brnd) => brnd.name.trim().toLowerCase());
+              const existingBrand = await BRAND.find({
+                branchId: { $in: branchIds },
+                  name: { $in: brandNames },
                   isDeleted:false,
               }).collation({ locale: 'en', strength: 2 });
       
-              if (existingDepartments.length > 0) {
+              if (existingBrand.length > 0) {
                   return res.status(400).json({
-                      message: `The department already exists in the specified branch!`,
+                      message: `The brand already exists in the specified branch!`,
                   });
               }
 
     
 
           // Prepare department data for bulk insertion 
-          const departmenetData = [];
+          const brandData = [];
 
           for (const branch of branches) {
-             for(const dept of departments){
-                departmenetData.push({
-                    name:dept.name,
+             for(const brnd of brands){
+                brandData.push({
+                    name:brnd.name,
                     branchId :branch._id,
                     createdById : user._id,
                     createdBy: user.name,
@@ -79,23 +78,23 @@ export const createDepartment = async (req,res,next)=>{
              }
           }
 
-          const createdDepartments = await DEPARTMENT.insertMany(departmenetData);
+          const createdBrands = await BRAND.insertMany(brandData);
           
 
           return res.status(200).json({
-            message: "Departments added successfully!",
-            data: createdDepartments,
+            message: "Brand added successfully!",
+            data: createdBrands,
         });
-
-    }catch(err){
+        
+    } catch (err) {
         next(err)
     }
 }
 
 
-
-export const getAllDepartment = async (req,res,next)=>{
+export const getAllBrands = async (req,res,next)=>{
     try{
+
 
         const { branchId  } = req.params;
 
@@ -129,20 +128,22 @@ export const getAllDepartment = async (req,res,next)=>{
               return res.status(404).json({ message: "No matching branch found!" });
           }
 
-          const departments = await DEPARTMENT.find({  branchId,  isDeleted: false,  }).sort({ createdAt: -1 });
+          const brands = await BRAND.find({  branchId,  isDeleted: false,  }).sort({ createdAt: -1 });
          
-          return res.status(200).json({ data: departments })
+          return res.status(200).json({ data: brands })
 
     }catch(err){
         next(err)
     }
 }
 
-export const updateDepartment = async (req,res,next)=>{
+
+
+export const updateBrand = async (req,res,next)=>{
     try{
 
        
-        const { branchId ,departmentId , name } = req.body;
+        const { branchId ,brandId , name } = req.body;
 
         const userId = req.user;
 
@@ -155,11 +156,11 @@ export const updateDepartment = async (req,res,next)=>{
             return res.status(400).json({ message: "Brnach Id is required!" });
         }
 
-        if (!departmentId) {
-            return res.status(400).json({ message: "Department Id is required!" });
+        if (!brandId) {
+            return res.status(400).json({ message: "Brand Id is required!" });
         }
         if (!name || typeof name !== "string" || name.trim().length === 0) {
-            return res.status(400).json({ message: "New department name is required!" });
+            return res.status(400).json({ message: "New brand name is required!" });
         }
 
         let filter = {};
@@ -179,38 +180,38 @@ export const updateDepartment = async (req,res,next)=>{
         }
 
          // Verify if the department exists in the restaurant
-         const department = await DEPARTMENT.findOne({ _id: departmentId, branchId });
-         if (!department) {
-             return res.status(404).json({ message: "Department not found!" });
+         const brand = await BRAND.findOne({ _id: brandId, branchId });
+         if (!brand) {
+             return res.status(404).json({ message: "Brand not found!" });
          }
 
-         const existDepartment = await DEPARTMENT.findOne({
+         const existBrand = await BRAND.findOne({
             branchId,
             name: name.trim(),
             isDeleted: false,
-            _id: { $ne: departmentId }, // Exclude the current department
+            _id: { $ne: brandId }, // Exclude the current department
         });
 
-         if(existDepartment){
+         if(existBrand){
             return res.status(400).json({
-                message: `The department already exists in the specified branch!`,
+                message: `The brand already exists in the specified branch!`,
             });
          }
 
-         if (department.name === name.trim()) {
-            return res.status(400).json({ message: "New department name is the same as the current name!" });
+         if (brand.name === name.trim()) {
+            return res.status(400).json({ message: "New brand name is the same as the current name!" });
         }
 
-         department.name = name.trim();
-         await department.save();
+         brand.name = name.trim();
+         await brand.save();
 
           // Redis Invalidate: Use pipeline for efficiency
         //   const departmentKey = `departments:restaurant:${restaurant._id}`;
         //   await redisClient.del(departmentKey);
 
          return res.status(200).json({
-            message: "Department updated successfully!",
-            data: department,
+            message: "Brand updated successfully!",
+            data: brand,
         });
  
     }catch(err){
@@ -220,11 +221,11 @@ export const updateDepartment = async (req,res,next)=>{
 
 
 
-export const deleteDepartment = async (req,res,next)=>{
+export const deleteBrand = async (req,res,next)=>{
     try{
 
        
-        const { branchId ,departmentId } = req.body;
+        const { branchId ,brandId } = req.body;
 
         const userId = req.user;
 
@@ -237,8 +238,8 @@ export const deleteDepartment = async (req,res,next)=>{
             return res.status(400).json({ message: "Branch Id is required!" });
         }
 
-        if (!departmentId) {
-            return res.status(400).json({ message: "Department Id is required!" });
+        if (!brandId) {
+            return res.status(400).json({ message: "Brand Id is required!" });
         }
        
 
@@ -259,18 +260,18 @@ export const deleteDepartment = async (req,res,next)=>{
         }
 
          // Verify if the department exists in the restaurant
-         const department = await DEPARTMENT.findOne({ _id: departmentId, branchId });
-         if (!department) {
-             return res.status(404).json({ message: "Department not found!" });
+         const brand = await BRAND.findOne({ _id: brandId, branchId });
+         if (!brand) {
+             return res.status(404).json({ message: "Brand not found!" });
          }
 
            // Check for associated positions and unlink them
-        const associatedPositions = await POSITION.find({ departmentId });
-        if (associatedPositions.length > 0) {
-            await POSITION.updateMany({ departmentId }, { $set: { departmentId: null } });
+        const associatedModel = await MODEL.find({ brandId });
+        if (associatedModel.length > 0) {
+            await MODEL.updateMany({ brandId }, { $set: { brandId: null } });
         }
 
-            await DEPARTMENT.findByIdAndUpdate(departmentId, {
+            await BRAND.findByIdAndUpdate(brandId, {
                 isDeleted: true,
                 deletedAt: new Date(),
                 deletedById: user._id,
@@ -278,7 +279,7 @@ export const deleteDepartment = async (req,res,next)=>{
               });
 
          return res.status(200).json({
-            message: "Department deleted successfully!",
+            message: "Brand deleted successfully!",
         });
  
     }catch(err){
@@ -288,12 +289,10 @@ export const deleteDepartment = async (req,res,next)=>{
 
 
 
-
-
-export const createPosition = async (req,res,next)=>{
+export const createModel = async (req,res,next)=>{
     try{
 
-        const { branchId, departmentId, positions } = req.body;
+        const { branchId, brandId, models } = req.body;
         const userId = req.user;
 
         // Validate user
@@ -303,18 +302,18 @@ export const createPosition = async (req,res,next)=>{
         }
 
         if (!branchId) {
-            return res.status(400).json({ message: "Restaurant Id is required!" });
+            return res.status(400).json({ message: "Restaurant ID is required!" });
         }
-        if (!departmentId) {
-            return res.status(400).json({ message: "Department Id is required!" });
+        if (!brandId) {
+            return res.status(400).json({ message: "Brand Id is required!" });
         }
-        if (!positions || !Array.isArray(positions) || positions.length === 0) {
-            return res.status(400).json({ message: "Positions are required!" });
+        if (!models || !Array.isArray(models) || models.length === 0) {
+            return res.status(400).json({ message: "Models are required!" });
         }
 
-        for (const position of positions) {
-            if (!position.name || typeof position.name !== "string" || position.name.trim().length === 0) {
-                return res.status(400).json({ message: "Position name is required for each position!" });
+        for (const model of models) {
+            if (!model.name || typeof model.name !== "string" || model.name.trim().length === 0) {
+                return res.status(400).json({ message: "Model name is required for each model!" });
             }
         }
 
@@ -334,46 +333,46 @@ export const createPosition = async (req,res,next)=>{
             return res.status(404).json({ message: "No matching branch found!" });
         }
 
-        const department = await DEPARTMENT.findOne({ _id : departmentId , branchId })
-        if(!department){
-            return res.status(404).json({ message: "Department not found in the specified branch!" });
+        const brand = await BRAND.findOne({ _id : brandId , branchId })
+        if(!brand){
+            return res.status(404).json({ message: "Brand not found in the specified branch!" });
         }
         
 
         // Collect position names (case-insensitive) and check for duplicates
-        const positionNames = positions.map((position) => position.name.trim().toLowerCase());
-        const existingPositions = await POSITION.find({
-            departmentId,
+        const modelNames = models.map((model) => model.name.trim().toLowerCase());
+        const existingModel = await MODEL.find({
+            brandId,
             branchId,
             isDeleted:false,
-            name: { $in: positionNames }, // Case-insensitive match
+            name: { $in: modelNames }, // Case-insensitive match
         }).collation({ locale: 'en', strength: 2 });
 
-        if (existingPositions.length > 0) {
-            const duplicateNames = existingPositions.map((position) => position.name);
+        if (existingModel.length > 0) {
+            const duplicateNames = existingModel.map((model) => model.name);
             return res.status(400).json({
-                message: `position already exist in this department!`,
+                message: `Model already exist in this brand!`,
             });
         }
 
 
         // Prepare position data for bulk insertion 
-        const positionData = positions.map((position) => ({
-            name: position.name.trim(),
-            departmentId,
+        const modelData = models.map((model) => ({
+            name: model.name.trim(),
+            brandId,
             branchId,
             createdById: user._id,
             createdBy: user.name,
         }));
 
 
-                const createdPositions  = await POSITION.insertMany(positionData);
+                const createdModel  = await MODEL.insertMany(modelData);
 
 
 
         return res.status(201).json({
-            message: "Positions added successfully!",
-            data: createdPositions,
+            message: "Models added successfully!",
+            data: createdModel,
         });
     }catch(err){
         next(err)
@@ -383,7 +382,7 @@ export const createPosition = async (req,res,next)=>{
 
 
 
-export const getAllPositions = async (req, res, next) => {
+export const getAllModels = async (req, res, next) => {
     try {
         const { branchId } = req.params;
 
@@ -414,29 +413,29 @@ export const getAllPositions = async (req, res, next) => {
 
 
         // Aggregate to fetch positions with their departments in a flat structure
-        const positionsWithDepartments = await POSITION.aggregate([
+        const modelWithBrand = await MODEL.aggregate([
             {
                 $match: { branchId: new mongoose.Types.ObjectId(branchId),  isDeleted: false },
             },
             {
                 $lookup: {
-                    from: "departments", // Collection to join with
-                    localField: "departmentId", // Field in the position collection
+                    from: "brands", // Collection to join with
+                    localField: "brandId", // Field in the position collection
                     foreignField: "_id", // Field in the department collection
-                    as: "department", // Alias for the resulting joined data
+                    as: "brand", // Alias for the resulting joined data
                 },
             },
             {
                 $unwind: {
-                    path: "$department",
+                    path: "$brand",
                     preserveNullAndEmptyArrays: true, // Include positions without a department
                 },
             },
             {
                 $project: {
                     _id: 1,
-                    positionName: "$name",
-                    departmentName: { $ifNull: ["$department.name", "No Department"] },
+                    modelName: "$name",
+                    brandName: { $ifNull: ["$brand.name", "No Brand"] },
                     createdAt: 1,
                     updatedAt: 1,
                     createdBy:1,
@@ -447,7 +446,7 @@ export const getAllPositions = async (req, res, next) => {
             },
         ]);;
 
-        return res.status(200).json({ data: positionsWithDepartments });
+        return res.status(200).json({ data: modelWithBrand });
     } catch (err) {
         next(err);
     }
@@ -456,10 +455,12 @@ export const getAllPositions = async (req, res, next) => {
 
 
 
-export const updatePosition = async (req,res,next)=>{
+
+
+export const updateModel = async (req,res,next)=>{
     try{
 
-        const { branchId ,positionId , name } = req.body;
+        const { branchId ,modelId , name } = req.body;
 
         const userId = req.user;
 
@@ -472,11 +473,11 @@ export const updatePosition = async (req,res,next)=>{
             return res.status(400).json({ message: "Branch Id is required!" });
         }
 
-        if (!positionId) {
-            return res.status(400).json({ message: "Position Id is required!" });
+        if (!modelId) {
+            return res.status(400).json({ message: "Model Id is required!" });
         }
         if (!name || typeof name !== "string" || name.trim().length === 0) {
-            return res.status(400).json({ message: "New Position name is required!" });
+            return res.status(400).json({ message: "New Model name is required!" });
         }
 
 
@@ -496,36 +497,36 @@ export const updatePosition = async (req,res,next)=>{
             return res.status(404).json({ message: "No matching branch found!" });
         }
 
-        const position = await POSITION.findOne({ _id: positionId, branchId });
-        if(!position){
-            return res.status(404).json({ message: "Position not found!" });
+        const model = await MODEL.findOne({ _id: modelId, branchId });
+        if(!model){
+            return res.status(404).json({ message: "Model not found!" });
         }
 
-        const existPosition = await POSITION.findOne({
+        const existModel = await MODEL.findOne({
             branchId,
             name: name.trim(),
             isDeleted: false,
-            _id: { $ne: positionId }, 
+            _id: { $ne: modelId }, 
         });
 
-         if(existPosition){
+         if(existModel){
             return res.status(400).json({
-                message: `The position already exists in the specified branch!`,
+                message: `The Model already exists in the specified branch!`,
             });
          }
 
          
-         if (position.name === name.trim()) {
-            return res.status(400).json({ message: "New position name is the same as the current name!" });
+         if (model.name === name.trim()) {
+            return res.status(400).json({ message: "New model name is the same as the current name!" });
         }
 
 
-        position.name = name.trim();
-        await position.save();
+        model.name = name.trim();
+        await model.save();
 
         return res.status(200).json({
-            message: "Position updated successfully!",
-            data: position,
+            message: "Model updated successfully!",
+            data: model,
         })
 
     }catch(err){
@@ -534,12 +535,11 @@ export const updatePosition = async (req,res,next)=>{
 }
 
 
-
-export const deletePosition = async (req,res,next)=>{
+export const deleteModel = async (req,res,next)=>{
     try{
 
        
-        const { branchId ,positionId } = req.body;
+        const { branchId ,modelId } = req.body;
 
         const userId = req.user;
 
@@ -552,8 +552,8 @@ export const deletePosition = async (req,res,next)=>{
             return res.status(400).json({ message: "Branch Id is required!" });
         }
 
-        if (!positionId) {
-            return res.status(400).json({ message: "Position Id is required!" });
+        if (!modelId) {
+            return res.status(400).json({ message: "Model Id is required!" });
         }
        
 
@@ -573,12 +573,12 @@ export const deletePosition = async (req,res,next)=>{
             return res.status(404).json({ message: "No matching branch found!" });
         }
 
-        const position = await POSITION.findOne({ _id: positionId, branchId });
-        if(!position){
-            return res.status(404).json({ message: "Position not found!" });
+        const model = await MODEL.findOne({ _id: modelId, branchId });
+        if(!model){
+            return res.status(404).json({ message: "Model not found!" });
         }
 
-        await POSITION.findByIdAndUpdate(positionId, {
+        await MODEL.findByIdAndUpdate(modelId, {
             isDeleted: true,
             deletedAt: new Date(),
             deletedById: user._id,
@@ -586,7 +586,7 @@ export const deletePosition = async (req,res,next)=>{
           });
       
          return res.status(200).json({
-            message: "Position deleted successfully!",
+            message: "Model deleted successfully!",
         });
  
     }catch(err){
@@ -595,10 +595,10 @@ export const deletePosition = async (req,res,next)=>{
 }
 
 
-export const getPositionByDepartment = async(req,res,next)=>{
+export const getModelByBrand = async(req,res,next)=>{
     try{
 
-        const {  departmentId   } = req.params;
+        const {  brandId   } = req.params;
 
         const userId = req.user;
 
@@ -607,17 +607,17 @@ export const getPositionByDepartment = async(req,res,next)=>{
        return res.status(400).json({ message: "User not found!" });
    }
 
-        if (!departmentId) {
-            return res.status(400).json({ message: "Department Id is required!" });
+        if (!brandId) {
+            return res.status(400).json({ message: "Brand Id is required!" });
         }
 
-        const department = await DEPARTMENT.findById(departmentId);
-        if(!department){
-            return res.status(400).json({ message:'Department not found!'})
+        const brand = await BRAND.findById(brandId);
+        if(!brand){
+            return res.status(400).json({ message:'Brand not found!'})
         }
 
-        const position = await POSITION.find({ departmentId });
-        return res.status(200).json({ data: position})
+        const model = await MODEL.find({ brandId });
+        return res.status(200).json({ data: model})
 
     }catch(err){
         next(err);
