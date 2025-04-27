@@ -2,25 +2,16 @@ import mongoose  from "mongoose";
 
 const employeeSchema = new mongoose.Schema(
   {
-    restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant", required: true },
-    employeeId : { type :Number, required:true} ,
-    firstName: { type: String, required: true },
-    lastName: { type: String },
+    branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant", required: true },
+    name: { type: String, required: true },
     email: { type: String, required: true },
-    contactNo: { type:String, required: true },
-    contactNo2: { type:String,default:null },
-    contactNo3: { type:String,default:null },
-    address: { type: String, required: true },
-    gender: { type: String, required: true },
-    nationality: { type: String },
+    contactNo: { type:String, default:null },
+    address: { type: String, default:null },
+    gender: { type: String, default:null },
     department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
     position: { type: mongoose.Schema.Types.ObjectId, ref: "position" },
     joiningDate: { type: Date },
     salary: { type: Number },
-    emiratesIdNo: { type: String },
-    passportNo: { type: String },
-    visaType: { type: String },
-    visaExpiryDate: { type: Date },
     temporaryEmployee: { type: Boolean, default: false },
   documents: [
   {

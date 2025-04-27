@@ -1,5 +1,5 @@
 import express from 'express'
-import { LoginUser,registerBranch } from '../controller/userController/user.js';
+import { LoginUser,registerBranch,createUser,getAllUser,getOneUser,updateUser,deleteUser } from '../controller/userController/user.js';
 import  {  createDepartment,getAllDepartment,updateDepartment,deleteDepartment,createPosition,getAllPositions,updatePosition, deletePosition,getPositionByDepartment } from '../controller/employeeController/employeeCntrl.js'
 import { VerifyToken } from '../middleware/jwt.js'
 import { createBranch,getAllBranch,updateBranch,deleteBranch } from '../controller/branchController/branchCntrl.js';
@@ -24,13 +24,13 @@ router.delete('/branch/:branchId',VerifyToken,deleteBranch)
 
 //department
 router.post('/department',VerifyToken,createDepartment);
-router.get('/department/:branchId',VerifyToken,getAllDepartment);
+router.get('/department/:branchAdminId',VerifyToken,getAllDepartment);
 router.put('/department',VerifyToken,updateDepartment);
 router.delete('/department',VerifyToken,deleteDepartment);
 
 //position
 router.post('/position',VerifyToken,createPosition);
-router.get('/position/:branchId',VerifyToken,getAllPositions);
+router.get('/position/:branchAdminId',VerifyToken,getAllPositions);
 router.put('/position',VerifyToken,updatePosition);
 router.delete('/position',VerifyToken,deletePosition)
 router.get('/position-dept/:departmentId',VerifyToken,getPositionByDepartment)
@@ -49,6 +49,22 @@ router.get('/model/:branchId',VerifyToken,getAllModels);
 router.put('/model',VerifyToken,updateModel);
 router.delete('/model',VerifyToken,deleteModel);
 router.get('/model-id/:brandId',VerifyToken,getModelByBrand)
+
+
+//user creation
+router.post('/user',VerifyToken,createUser);
+router.get('/user/:branchId',VerifyToken,getAllUser);
+router.get('/user-data/:userId',VerifyToken,getOneUser);
+router.put('/user',VerifyToken,updateUser);
+router.delete('/user',VerifyToken,deleteUser);
+
+
+//employee
+
+
+
+
+
 
 
 

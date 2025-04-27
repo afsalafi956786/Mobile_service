@@ -10,7 +10,7 @@ export const createDepartment = async (req,res,next)=>{
     try{
 
 
-        const { branchIds , departments  } = req.body;
+        const { branchAdminId, departments  } = req.body;
 
         const userId = req.user;
 
@@ -19,9 +19,10 @@ export const createDepartment = async (req,res,next)=>{
             return res.status(400).json({ message: "User not found!" });
         }
 
-        if (!branchIds || !Array.isArray(branchIds) || branchIds.length === 0) {
-            return res.status(400).json({ message: "Branch IDs are required!" });
+        if (!branchAdminId) {
+            return res.status(400).json({ message: "Branch Admin ID is required!" });
         }
+
 
         if (!departments || !Array.isArray(departments) || departments.length === 0) {
             return res.status(400).json({ message: "Departments are required!" });
@@ -34,52 +35,33 @@ export const createDepartment = async (req,res,next)=>{
       }
 
 
-      let filter = {};
-
-      if(user.role === "BranchAdmin"){
-        filter = { _id: { $in: branchIds }, branchAdminId: user._id };
-      }else if( user.role === 'User'){
-        filter = { _id: { $in: branchIds }};
-      }else{
-        return res.status(403).json({ message: "Unauthorized!" });
-      }
-
-      const branches = await BRANCH.find(filter);
-        if (!branches || branches.length === 0) {
-            return res.status(404).json({ message: "No matching branches found!" });
+      const branch = await BRANCH.findOne({ branchAdminId: branchAdminId, isDeleted: false });
+        if (!branch) {
+            return res.status(404).json({ message: "No branch found for the given Branch Admin!" });
         }
 
               // Collect all potential duplicates in one batch query
               const departmentNames = departments.map((dept) => dept.name.trim().toLowerCase());
               const existingDepartments = await DEPARTMENT.find({
-                  restaurantId: { $in: branchIds },
+                branchAdminId: branchAdminId,
                   name: { $in: departmentNames },
                   isDeleted:false,
               }).collation({ locale: 'en', strength: 2 });
       
               if (existingDepartments.length > 0) {
                   return res.status(400).json({
-                      message: `The department already exists in the specified branch!`,
+                      message: `The department already exists!`,
                   });
               }
 
-    
+          const departmentData = departments.map((dept) => ({
+            name: dept.name,
+            branchAdminId: branchAdminId,
+            createdById: user._id,
+            createdBy: user.name,
+        }));
 
-          // Prepare department data for bulk insertion 
-          const departmenetData = [];
-
-          for (const branch of branches) {
-             for(const dept of departments){
-                departmenetData.push({
-                    name:dept.name,
-                    branchId :branch._id,
-                    createdById : user._id,
-                    createdBy: user.name,
-                })
-             }
-          }
-
-          const createdDepartments = await DEPARTMENT.insertMany(departmenetData);
+          const createdDepartments = await DEPARTMENT.insertMany(departmentData);
           
 
           return res.status(200).json({
@@ -97,7 +79,7 @@ export const createDepartment = async (req,res,next)=>{
 export const getAllDepartment = async (req,res,next)=>{
     try{
 
-        const { branchId  } = req.params;
+        const { branchAdminId  } = req.params;
 
         const userId = req.user;
 
@@ -106,30 +88,16 @@ export const getAllDepartment = async (req,res,next)=>{
             return res.status(400).json({ message: "User not found!" });
         }
 
-        if (!branchId) {
-            return res.status(400).json({ message: "Branch Id is required!" });
+        if (!branchAdminId) {
+            return res.status(400).json({ message: "Branch Admin ID is required!" });
         }
 
-
-        let filter = {};
-
-        if(user.role === "BranchAdmin"){
-          filter = { _id: branchId , branchAdminId: user._id };
-        }else if( user.role === 'User'){
-          filter = { _id: branchId };
-        }else{
-          return res.status(403).json({ message: "Unauthorized!" });
+        const branch = await BRANCH.findOne({ branchAdminId: branchAdminId, isDeleted: false });
+        if (!branch) {
+            return res.status(404).json({ message: "No branch found for the given Branch Admin!" });
         }
 
-        // const cacheKey = `departments:restaurant:${restaurantId}`;
-
-  
-        const branch = await BRANCH.findOne(filter);
-          if (!branch) {
-              return res.status(404).json({ message: "No matching branch found!" });
-          }
-
-          const departments = await DEPARTMENT.find({  branchId,  isDeleted: false,  }).sort({ createdAt: -1 });
+          const departments = await DEPARTMENT.find({  branchAdminId,  isDeleted: false,  }).sort({ createdAt: -1 });
          
           return res.status(200).json({ data: departments })
 
@@ -142,7 +110,7 @@ export const updateDepartment = async (req,res,next)=>{
     try{
 
        
-        const { branchId ,departmentId , name } = req.body;
+        const { branchAdminId ,departmentId , name } = req.body;
 
         const userId = req.user;
 
@@ -151,8 +119,8 @@ export const updateDepartment = async (req,res,next)=>{
             return res.status(400).json({ message: "User not found!" });
         }
 
-        if (!branchId) {
-            return res.status(400).json({ message: "Brnach Id is required!" });
+        if (!branchAdminId) {
+            return res.status(400).json({ message: "Branch Admin ID is required!" });
         }
 
         if (!departmentId) {
@@ -162,30 +130,20 @@ export const updateDepartment = async (req,res,next)=>{
             return res.status(400).json({ message: "New department name is required!" });
         }
 
-        let filter = {};
-
-        // Access control based on user role
-        if (user.role === "BranchAdmin") {
-            filter = { _id: branchId , branchAdminId: user._id };
-        } else if (user.role === "User") {
-            filter = { _id: branchId };
-        } else {
-            return res.status(403).json({ message: "Unauthorized access!" });
-        }
-
-        const branch = await BRANCH.findOne(filter);
+        
+        const branch = await BRANCH.findOne({ branchAdminId: branchAdminId, isDeleted: false });
         if (!branch) {
-            return res.status(404).json({ message: "No matching branch found!" });
+            return res.status(404).json({ message: "No branch found for the given Branch Admin!" });
         }
 
          // Verify if the department exists in the restaurant
-         const department = await DEPARTMENT.findOne({ _id: departmentId, branchId });
+         const department = await DEPARTMENT.findOne({ _id: departmentId, branchAdminId  });
          if (!department) {
              return res.status(404).json({ message: "Department not found!" });
          }
 
          const existDepartment = await DEPARTMENT.findOne({
-            branchId,
+            branchAdminId,
             name: name.trim(),
             isDeleted: false,
             _id: { $ne: departmentId }, // Exclude the current department
@@ -193,7 +151,7 @@ export const updateDepartment = async (req,res,next)=>{
 
          if(existDepartment){
             return res.status(400).json({
-                message: `The department already exists in the specified branch!`,
+                message: `The department already exists!`,
             });
          }
 
@@ -224,7 +182,7 @@ export const deleteDepartment = async (req,res,next)=>{
     try{
 
        
-        const { branchId ,departmentId } = req.body;
+        const { branchAdminId ,departmentId } = req.body;
 
         const userId = req.user;
 
@@ -233,33 +191,13 @@ export const deleteDepartment = async (req,res,next)=>{
             return res.status(400).json({ message: "User not found!" });
         }
 
-        if (!branchId) {
-            return res.status(400).json({ message: "Branch Id is required!" });
+        if (!branchAdminId) {
+            return res.status(400).json({ message: "Branch Admin ID is required!" });
         }
 
-        if (!departmentId) {
-            return res.status(400).json({ message: "Department Id is required!" });
-        }
        
-
-        let filter = {};
-
-        // Access control based on user role
-        if (user.role === "BranchAdmin") {
-            filter = { _id: branchId, branchAdminId: user._id };
-        } else if (user.role === "User") {
-            filter = { _id: branchId };
-        } else {
-            return res.status(403).json({ message: "Unauthorized access!" });
-        }
-
-        const branch = await BRANCH.findOne(filter);
-        if (!branch) {
-            return res.status(404).json({ message: "No matching branch found!" });
-        }
-
          // Verify if the department exists in the restaurant
-         const department = await DEPARTMENT.findOne({ _id: departmentId, branchId });
+         const department = await DEPARTMENT.findOne({ _id: departmentId, branchAdminId });
          if (!department) {
              return res.status(404).json({ message: "Department not found!" });
          }
@@ -293,7 +231,7 @@ export const deleteDepartment = async (req,res,next)=>{
 export const createPosition = async (req,res,next)=>{
     try{
 
-        const { branchId, departmentId, positions } = req.body;
+        const { branchAdminId, departmentId, positions } = req.body;
         const userId = req.user;
 
         // Validate user
@@ -302,8 +240,8 @@ export const createPosition = async (req,res,next)=>{
             return res.status(400).json({ message: "User not found!" });
         }
 
-        if (!branchId) {
-            return res.status(400).json({ message: "Restaurant Id is required!" });
+        if (!branchAdminId) {
+            return res.status(400).json({ message: "Branch Admin ID is required!" });
         }
         if (!departmentId) {
             return res.status(400).json({ message: "Department Id is required!" });
@@ -318,23 +256,12 @@ export const createPosition = async (req,res,next)=>{
             }
         }
 
-        // Access control based on user role
-        let filter = {};
-        if (user.role === "BranchAdmin") {
-            filter = { _id: branchId, branchAdminId: user._id };
-        } else if (user.role === "User") {
-            filter = { _id: branchId };
-        } else {
-            return res.status(403).json({ message: "Unauthorized access!" });
-        }
-
-        // Validate restaurant ownership
-        const branch = await BRANCH.findOne(filter);
+        const branch = await BRANCH.findOne({ branchAdminId: branchAdminId, isDeleted: false });
         if (!branch) {
-            return res.status(404).json({ message: "No matching branch found!" });
+            return res.status(404).json({ message: "No branch found for the given Branch Admin!" });
         }
 
-        const department = await DEPARTMENT.findOne({ _id : departmentId , branchId })
+        const department = await DEPARTMENT.findOne({ _id : departmentId , branchAdminId })
         if(!department){
             return res.status(404).json({ message: "Department not found in the specified branch!" });
         }
@@ -344,7 +271,7 @@ export const createPosition = async (req,res,next)=>{
         const positionNames = positions.map((position) => position.name.trim().toLowerCase());
         const existingPositions = await POSITION.find({
             departmentId,
-            branchId,
+            branchAdminId,
             isDeleted:false,
             name: { $in: positionNames }, // Case-insensitive match
         }).collation({ locale: 'en', strength: 2 });
@@ -361,7 +288,7 @@ export const createPosition = async (req,res,next)=>{
         const positionData = positions.map((position) => ({
             name: position.name.trim(),
             departmentId,
-            branchId,
+            branchAdminId,
             createdById: user._id,
             createdBy: user.name,
         }));
@@ -385,7 +312,7 @@ export const createPosition = async (req,res,next)=>{
 
 export const getAllPositions = async (req, res, next) => {
     try {
-        const { branchId } = req.params;
+        const { branchAdminId } = req.params;
 
         const userId = req.user;
              const user = await USER.findOne({_id:userId, isDeleted:false})
@@ -393,30 +320,16 @@ export const getAllPositions = async (req, res, next) => {
             return res.status(400).json({ message: "User not found!" });
         }
 
-        if (!branchId) {
-            return res.status(400).json({ message: "Branch Id is required!" });
-        }
-
-        let filter = {};
-
-        if (user.role === "BranchAdmin") {
-            filter = { _id: branchId, branchAdminId: user._id };
-        } else if (user.role === "User") {
-            filter = { _id: branchId};
-        } else {
-            return res.status(403).json({ message: "Unauthorized!" });
-        }
-
-        const branch = await BRANCH.findOne(filter);
+        const branch = await BRANCH.findOne({ branchAdminId: branchAdminId, isDeleted: false });
         if (!branch) {
-            return res.status(404).json({ message: "No matching branch found!" });
+            return res.status(404).json({ message: "No branch found for the given Branch Admin!" });
         }
 
 
         // Aggregate to fetch positions with their departments in a flat structure
         const positionsWithDepartments = await POSITION.aggregate([
             {
-                $match: { branchId: new mongoose.Types.ObjectId(branchId),  isDeleted: false },
+                $match: { branchAdminId: new mongoose.Types.ObjectId(branchAdminId),  isDeleted: false },
             },
             {
                 $lookup: {
@@ -459,7 +372,7 @@ export const getAllPositions = async (req, res, next) => {
 export const updatePosition = async (req,res,next)=>{
     try{
 
-        const { branchId ,positionId , name } = req.body;
+        const { branchAdminId ,positionId , name } = req.body;
 
         const userId = req.user;
 
@@ -468,8 +381,8 @@ export const updatePosition = async (req,res,next)=>{
             return res.status(400).json({ message: "User not found!" });
         }
 
-        if (!branchId) {
-            return res.status(400).json({ message: "Branch Id is required!" });
+        if (!branchAdminId) {
+            return res.status(400).json({ message: "Branch Admin ID is required!" });
         }
 
         if (!positionId) {
@@ -479,30 +392,19 @@ export const updatePosition = async (req,res,next)=>{
             return res.status(400).json({ message: "New Position name is required!" });
         }
 
-
-        let filter = {};
-        
-        // Access control based on user role
-        if (user.role === "BranchAdmin") {
-            filter = { _id: branchId, branchAdminId: user._id };
-        } else if (user.role === "User") {
-            filter = { _id: branchId };
-        } else {
-            return res.status(403).json({ message: "Unauthorized access!" });
-        }
-
-        const branch = await BRANCH.findOne(filter);
+        const branch = await BRANCH.findOne({ branchAdminId: branchAdminId, isDeleted: false });
         if (!branch) {
-            return res.status(404).json({ message: "No matching branch found!" });
+            return res.status(404).json({ message: "No branch found for the given Branch Admin!" });
         }
 
-        const position = await POSITION.findOne({ _id: positionId, branchId });
+
+        const position = await POSITION.findOne({ _id: positionId, branchAdminId });
         if(!position){
             return res.status(404).json({ message: "Position not found!" });
         }
 
         const existPosition = await POSITION.findOne({
-            branchId,
+            branchAdminId,
             name: name.trim(),
             isDeleted: false,
             _id: { $ne: positionId }, 
@@ -539,7 +441,7 @@ export const deletePosition = async (req,res,next)=>{
     try{
 
        
-        const { branchId ,positionId } = req.body;
+        const { branchAdminId ,positionId } = req.body;
 
         const userId = req.user;
 
@@ -548,32 +450,20 @@ export const deletePosition = async (req,res,next)=>{
             return res.status(400).json({ message: "User not found!" });
         }
 
-        if (!branchId) {
-            return res.status(400).json({ message: "Branch Id is required!" });
+        if (!branchAdminId) {
+            return res.status(400).json({ message: "Branch Admin ID is required!" });
         }
 
         if (!positionId) {
             return res.status(400).json({ message: "Position Id is required!" });
         }
-       
 
-        let filter = {};
-
-        // Access control based on user role
-        if (user.role === "BranchAdmin") {
-            filter = { _id: branchId, branchAdminId: user._id };
-        } else if (user.role === "User") {
-            filter = { _id: branchId };
-        } else {
-            return res.status(403).json({ message: "Unauthorized access!" });
-        }
-
-        const branch = await BRANCH.findOne(filter);
+        const branch = await BRANCH.findOne({ branchAdminId: branchAdminId, isDeleted: false });
         if (!branch) {
-            return res.status(404).json({ message: "No matching branch found!" });
+            return res.status(404).json({ message: "No branch found for the given Branch Admin!" });
         }
 
-        const position = await POSITION.findOne({ _id: positionId, branchId });
+        const position = await POSITION.findOne({ _id: positionId, branchAdminId });
         if(!position){
             return res.status(404).json({ message: "Position not found!" });
         }
