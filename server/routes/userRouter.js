@@ -4,6 +4,10 @@ import  {  createDepartment,getAllDepartment,updateDepartment,deleteDepartment,c
 import { VerifyToken } from '../middleware/jwt.js'
 import { createBranch,getAllBranch,updateBranch,deleteBranch } from '../controller/branchController/branchCntrl.js';
 import {  createBrand,getAllBrands,deleteBrand,updateBrand,createModel,getAllModels,updateModel,deleteModel,getModelByBrand } from '../controller/branchController/brand_modelCntrl.js'
+import { createSupplier,updateSupplier,getAllSuppliers,deleteSupplier } from '../controller/inventoryController/supplierCntrls.js';
+import { createUnitMeasurement,updateUnitMeasurement,getAllUnits,deleteUnits } from '../controller/inventoryController/unitCntrl.js';
+import { createPurchase } from '../controller/inventoryController/purchaseCntrl.js'
+import { createProduct,getAllProducts,getOneProduct,updateProduct,deleteProduct } from '../controller/inventoryController/proudutCntrl.js'
 
 import upload from '../middleware/multer.js';
 import connectCloudinary from '../middleware/cloudinary.js'
@@ -38,14 +42,14 @@ router.get('/position-dept/:departmentId',VerifyToken,getPositionByDepartment)
 
 //brand
 router.post('/brand',VerifyToken,createBrand);
-router.get('/brand/:branchId',VerifyToken,getAllBrands);
+router.get('/brand/:branchAdminId',VerifyToken,getAllBrands);
 router.put('/brand',VerifyToken,updateBrand);
 router.delete('/brand',VerifyToken,deleteBrand);
 
 
 //model
 router.post('/model',VerifyToken,createModel);
-router.get('/model/:branchId',VerifyToken,getAllModels);
+router.get('/model/:branchAdminId',VerifyToken,getAllModels);
 router.put('/model',VerifyToken,updateModel);
 router.delete('/model',VerifyToken,deleteModel);
 router.get('/model-id/:brandId',VerifyToken,getModelByBrand)
@@ -60,6 +64,32 @@ router.delete('/user',VerifyToken,deleteUser);
 
 
 //employee
+
+
+
+//supplier
+router.post('/supplier',VerifyToken,createSupplier);
+router.get('/supplier/:branchId',VerifyToken,getAllSuppliers)
+router.put('/supplier',VerifyToken,updateSupplier);
+router.delete('/supplier/:supplierId',VerifyToken,deleteSupplier);
+
+//unit 
+router.post('/unit',VerifyToken,createUnitMeasurement);
+router.put('/unit',VerifyToken,updateUnitMeasurement);
+router.get('/unit/:branchAdminId',VerifyToken,getAllUnits);
+router.delete('/unit/:unitId',VerifyToken,deleteUnits);
+
+
+//procut
+router.post('/product',VerifyToken,createProduct)
+router.get('/products/:branchId',VerifyToken,getAllProducts);
+router.get('/product/:productId',VerifyToken,getOneProduct);
+router.put('/product',VerifyToken,updateProduct);
+router.delete('/product/:productId',VerifyToken,deleteProduct)
+
+//purchase
+router.post('/purchase',VerifyToken,createPurchase);
+
 
 
 

@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema({
         ref: 'Department',
         default: null,
       },
+      branchAdminId : { type: mongoose.Schema.Types.ObjectId, ref: "User",default:null},
       positionId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'position',
@@ -36,7 +37,7 @@ const userSchema = new mongoose.Schema({
 
     },
     // permissions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Permission" }],
-    // createdBy : { type:String},
+    createdBy : { type:String},
     // status: { type: Boolean, default: true },
 
     isDeleted: { type: Boolean, default: false,index: true },

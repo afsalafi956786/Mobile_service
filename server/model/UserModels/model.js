@@ -7,7 +7,7 @@ const modelSchema  =new mongoose.Schema({
         type: String,
         required: true,
     },
-    branchId: {
+    branchAdminId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch',
         required: true,
@@ -33,7 +33,7 @@ const modelSchema  =new mongoose.Schema({
     timestamps:true
 })
 
-modelSchema.index({ branchId: 1, brandId: 1, name: 1 }, { unique: true, partialFilterExpression: { isDeleted: false } });
+modelSchema.index({ branchAdminId: 1, brandId: 1, name: 1 }, { unique: true, partialFilterExpression: { isDeleted: false } });
 
 
 const modelModel = mongoose.model('Model',modelSchema);

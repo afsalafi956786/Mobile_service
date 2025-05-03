@@ -7,7 +7,7 @@ const brandSchema =new mongoose.Schema({
         type: String,
         required: true, // Example: "Manager", "Chef", "Waiter"
     },
-    branchId: {
+    branchAdminId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch',
         required: true,
@@ -29,7 +29,7 @@ const brandSchema =new mongoose.Schema({
     timestamps:true
 })
 
-brandSchema.index({ name: 1, branchId: 1, isDeleted: 1 }, { unique: true ,partialFilterExpression: { isDeleted: false }});
+brandSchema.index({ name: 1, branchAdminId: 1, isDeleted: 1 }, { unique: true ,partialFilterExpression: { isDeleted: false }});
 
 const brandModel = mongoose.model('Brand',brandSchema);
 

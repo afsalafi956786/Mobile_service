@@ -139,7 +139,7 @@ export const registerBranch = async (req,res,next)=>{
 export const createUser = async(req,res,next)=>{
   try {
 
-    const { branchIds ,name, departmentId , positionId , email, password  } = req.body
+    const { branchIds,branchAdminId,name, departmentId , positionId , email, password  } = req.body
 
     const userId = req.user;
 
@@ -150,6 +150,9 @@ export const createUser = async(req,res,next)=>{
 
     if (!branchIds || !Array.isArray(branchIds) || branchIds.length === 0) {
       return res.status(400).json({ message: "Branch Ids are required!" });
+  }
+  if(!branchAdminId){
+    return res.status(400).json({ message:'Branch admin id is required!'})
   }
     if(!name){
       return res.status(400).json({ message:'Name is required!'})
@@ -187,6 +190,7 @@ export const createUser = async(req,res,next)=>{
       const newUser = new USER({
         name,
         branchIds,
+        branchAdminId,
         departmentId,
         employeeId: employee._id,
         positionId,
@@ -316,6 +320,7 @@ export const updateUser = async (req, res, next) => {
       branchIds,
       employeeId: userData.employeeId,
       departmentId,
+      branchAdminId:user.branchAdminId,
       positionId,
       email,
       role: userData.role,
