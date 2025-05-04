@@ -2,10 +2,7 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
-    name: {
-      type:String,
-      required: true,
-    },
+
     purchaseUnit: {
       type:String,
     },
@@ -19,6 +16,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    variant: {
+      type: String,
+      required: true,
+    },
     minStockAlert: {
       type: Number,
       default: 0,
@@ -27,6 +28,11 @@ const productSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Brand",
         required: true,
+    },
+    categoryId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
     },
     modelId : {
         type: mongoose.Schema.Types.ObjectId,
@@ -55,7 +61,7 @@ const productSchema = new mongoose.Schema(
 );
 
 productSchema.index(
-    { brandId: 1, modelId: 1, branchId: 1, isDeleted: 1 },
+    { brandId: 1, modelId: 1,categoryId: 1, branchId: 1, isDeleted: 1 },
     { unique: true, partialFilterExpression: { isDeleted: false } }
   );
 

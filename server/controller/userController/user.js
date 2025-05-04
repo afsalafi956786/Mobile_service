@@ -122,6 +122,7 @@ export const registerBranch = async (req,res,next)=>{
           });
 
           user.branchIds.push(branch._id);
+          user.branchAdminId = user._id;
           await user.save();
 
           const token = jwt.sign({id:user._id,role:user.role,email:user.email}

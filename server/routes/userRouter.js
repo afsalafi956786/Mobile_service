@@ -7,7 +7,7 @@ import {  createBrand,getAllBrands,deleteBrand,updateBrand,createModel,getAllMod
 import { createSupplier,updateSupplier,getAllSuppliers,deleteSupplier } from '../controller/inventoryController/supplierCntrls.js';
 import { createUnitMeasurement,updateUnitMeasurement,getAllUnits,deleteUnits } from '../controller/inventoryController/unitCntrl.js';
 import { createPurchase } from '../controller/inventoryController/purchaseCntrl.js'
-import { createProduct,getAllProducts,getOneProduct,updateProduct,deleteProduct } from '../controller/inventoryController/proudutCntrl.js'
+import { createProduct,getAllProducts,getOneProduct,updateProduct,deleteProduct,createCategory,getAllCategories,updateCategory,deleteCategory } from '../controller/inventoryController/proudutCntrl.js'
 
 import upload from '../middleware/multer.js';
 import connectCloudinary from '../middleware/cloudinary.js'
@@ -78,6 +78,13 @@ router.post('/unit',VerifyToken,createUnitMeasurement);
 router.put('/unit',VerifyToken,updateUnitMeasurement);
 router.get('/unit/:branchAdminId',VerifyToken,getAllUnits);
 router.delete('/unit/:unitId',VerifyToken,deleteUnits);
+
+
+//category
+router.post('/category',VerifyToken,createCategory);
+router.get('/category/:branchAdminId',VerifyToken,getAllCategories);
+router.put('/category',VerifyToken,updateCategory);
+router.delete('/category',VerifyToken,deleteCategory)
 
 
 //procut
