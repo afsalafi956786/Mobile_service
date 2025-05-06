@@ -16,10 +16,6 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    variant: {
-      type: String,
-      required: true,
-    },
     minStockAlert: {
       type: Number,
       default: 0,
@@ -44,6 +40,22 @@ const productSchema = new mongoose.Schema(
       ref: "Branch",
       required: true,
     },
+    variants: [
+      {
+        variantName: { type: String },
+        price: { type: Number },
+        color: { type: String },
+      }
+    ],
+    price: {
+      type:Number,
+      default:null
+    },
+    color: {
+      type:String,
+      default:null
+    },
+  
     createdById: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",

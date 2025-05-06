@@ -16,7 +16,9 @@ export const createProduct = async (req, res, next) => {
         brandId,
         modelId,
         categoryId,
-        variant,
+        variants,
+        color,
+        price,
         purchaseUnit,
         baseUnit,
         conversionRate,
@@ -49,9 +51,6 @@ export const createProduct = async (req, res, next) => {
       if(!categoryId){
         return res.status(400).json({ message: "Category Id is required!" });
       }
-      if(!variant){
-        return res.status(400).json({ message:'Variant is required!'})
-      }
       if(!brandId){
         return res.status(400).json({ message: "Brand Id is required!" });
       }
@@ -81,6 +80,17 @@ export const createProduct = async (req, res, next) => {
           .status(400)
           .json({ message: "Valid conversion rate is required!" });
       }
+
+      
+      if (Array.isArray(variants)) {
+        for (const p of variants) {
+          if (!p.variantName || p.price === undefined || !p.color) {
+            return res
+              .status(400)
+              .json({ message: "Each Variants must include a variant name,price and color" });
+          }
+        }
+      }
       
   
       let filter = {};
@@ -102,23 +112,25 @@ export const createProduct = async (req, res, next) => {
       // Check for duplicate model
       const existingProduct = await PRODUCT.findOne({
         modelId,
-        variant,
         branchId: { $in: branchIds },
         isDeleted: false, // if soft delete is implemented
       });
       
       if (existingProduct) {
         return res.status(400).json({
-          message: `This variant already exists for the selected model`,
+          message: `This Model already exists for the selected branch`,
         });
       }
+
 
   
       const productData = branchs.map((branch) => ({
         purchaseUnit,
         baseUnit,
         categoryId,
-        variant,
+        price : variants && variants.length > 0 ? null : price,
+        color: variants && variants.length > 0 ? null : color,
+        variants: variants || [],
         brandId,
         modelId,
         conversionRate: Number(conversionRate),
@@ -157,13 +169,17 @@ export const createProduct = async (req, res, next) => {
       if (!user) {
         return res.status(400).json({ message: "User not found!" });
       }
+
+      console.log(branchId,'b')
   
       // Permission check
       let filter = {};
       if (user.role === "BranchAdmin") {
           filter = { _id: branchId, branchAdminId: user._id };
+          console.log(filter,'main')
       } else if (user.role === "User") {
           filter = { _id: branchId };
+          conosle.log(filter,'fiuser')
       } else {
           return res.status(403).json({ message: "Unauthorized!" });
       }
@@ -177,6 +193,7 @@ export const createProduct = async (req, res, next) => {
         branchId,
         isDeleted: false,
       }).sort({ createdAt: -1 });
+      console.log(products,'prod')
   
       return res.status(200).json({
         data: products,
@@ -220,97 +237,154 @@ export const createProduct = async (req, res, next) => {
   
 
 
-  export const updateProduct = async (req,res,next)=>{
+  export const updateProduct = async (req, res, next) => {
     try {
       const {
         productId,
-        categoryId,
-        variant,
-        purchaseUnit,
-        baseUnit,
+        branchId,
         brandId,
         modelId,
+        categoryId,
+        variants,
+        color,
+        price,
+        purchaseUnit,
+        baseUnit,
         conversionRate,
         stockCount,
         minStockAlert,
       } = req.body;
 
       const userId = req.user;
-
-      if(!productId){
-        return res.status(400).json({ message:'Product Id is required!'})
-      };
-
-      const user = await USER.findOne({ _id: userId , isDeleted:false})
+  
+      if (!productId) {
+        return res.status(400).json({ message: "Product ID is required!" });
+      }
+  
+      const user = await USER.findOne({ _id: userId, isDeleted: false });
       if (!user) {
         return res.status(400).json({ message: "User not found!" });
       }
-
-      const existing = await PRODUCT.findOne({
-        _id: productId,
-        isDeleted: false,
-      });
-
-      if (!existing) {
-        return res.status(404).json({ message: "Product not found!" });
+  
+      if (!branchId) {
+        return res.status(400).json({ message: "Branch ID is required!" });
       }
-
+  
+      if (!purchaseUnit) {
+        return res.status(400).json({ message: "Purchase unit is required!" });
+      }
+  
+      if (!baseUnit) {
+        return res.status(400).json({ message: "Base unit is required!" });
+      }
+  
+      if (!categoryId) {
+        return res.status(400).json({ message: "Category Id is required!" });
+      }
+  
+      if (!brandId) {
+        return res.status(400).json({ message: "Brand Id is required!" });
+      }
+  
+      if (!modelId) {
+        return res.status(400).json({ message: "Model Id is required!" });
+      }
+  
+      const brand = await BRAND.findById(brandId);
+      const model = await MODEL.findById(modelId);
+      const category = await CATEGORY.findById(categoryId);
+      if (!brand || !model) {
+        return res.status(400).json({ message: "Brand or model is not found!" });
+      }
+      if (!category) {
+        return res.status(400).json({ message: "Category not found!" });
+      }
+  
+      if (
+        conversionRate === undefined ||
+        conversionRate === null ||
+        isNaN(Number(conversionRate))
+      ) {
+        return res.status(400).json({ message: "Valid conversion rate is required!" });
+      }
+  
+      if (Array.isArray(variants)) {
+        for (const p of variants) {
+          if (!p.variantName || p.price === undefined || !p.color) {
+            return res
+              .status(400)
+              .json({ message: "Each variant must include variant name, price, and color!" });
+          }
+        }
+      }
+  
+      // Check access permission for branch
       let filter = {};
       if (user.role === "BranchAdmin") {
-          filter = { _id: existing.branchId, branchAdminId: user._id };
+        filter = { _id: branchId, branchAdminId: user._id };
       } else if (user.role === "User") {
-          filter = { _id:existing.branchId };
+        filter = { _id: branchId };
       } else {
-          return res.status(403).json({ message: "Unauthorized!" });
+        return res.status(403).json({ message: "Unauthorized!" });
       }
-
+  
       const branchData = await BRANCH.findOne(filter);
       if (!branchData) {
-          return res.status(404).json({ message: "No matching branch found!" });
+        return res.status(404).json({ message: "No matching branch found!" });
       }
-
-      //here also check the model 
-
-        const duplicateProduct = await PRODUCT.findOne({
-          _id: { $ne: productId }, // Exclude current product
-          modelId: modelId,
-          variant,
-          branchId: existing.branchId,
-          isDeleted: false,
+  
+      // Check product exists
+      const existingProduct = await PRODUCT.findOne({ _id: productId, isDeleted: false });
+      if (!existingProduct) {
+        return res.status(404).json({ message: "Product not found!" });
+      }
+  
+      // Check if the updated model already exists in same branch (for other product)
+      const duplicateModel = await PRODUCT.findOne({
+        _id: { $ne: productId },
+        modelId,
+        branchId,
+        isDeleted: false,
+      });
+  
+      if (duplicateModel) {
+        return res.status(400).json({
+          message: "This model already exists for the selected branch!",
         });
-      
-        if (duplicateProduct) {
-          return res.status(400).json({
-            message: "This variant already exists for the selected model",
-          });
-        }
-
-
-   
-
-    if(categoryId) existing.categoryId = categoryId;
-    if (purchaseUnit) existing.purchaseUnit = purchaseUnit;
-    if(brandId) existing.brandId = brandId;
-    if(modelId) existing.modelId = modelId;
-    if(variant) existing.variant = variant;
-    if (baseUnit) existing.baseUnit = baseUnit;
-    if (conversionRate !== undefined && !isNaN(Number(conversionRate)))
-      existing.conversionRate = Number(conversionRate);
-    if (stockCount !== undefined) existing.stockCount = stockCount;
-    if (minStockAlert !== undefined) existing.minStockAlert = minStockAlert;
-
-
-    await existing.save();
-
-    return res.status(200).json({ message:'Product updated successfully!',data:existing})
-
-      
+      }
+  
+      // Update product
+      const updatedProduct = await PRODUCT.findByIdAndUpdate(
+        productId,
+        {
+          purchaseUnit,
+          baseUnit,
+          categoryId,
+          price: variants && variants.length > 0 ? null : price,
+          color: variants && variants.length > 0 ? null : color,
+          variants: variants || [],
+          brandId,
+          modelId,
+          conversionRate: Number(conversionRate),
+          stockCount: stockCount || 0,
+          minStockAlert: minStockAlert || 0,
+          branchId: branchId,
+          updatedById: user._id,
+          updatedBy: user.name,
+          updatedAt: new Date(),
+        },
+        { new: true }
+      );
+  
+      return res.status(200).json({
+        message: "Product updated successfully!",
+        data: updatedProduct,
+      });
     } catch (err) {
-      next(err)
-      
+      next(err);
     }
-
-  }
+  };
+  
 
   
 

@@ -12,10 +12,10 @@ export const LoginUser = async (req,res,next)=>{
         const {  email, password } = req.body;
 
         if(!email){
-            return res.status(404).json({ message:'Email is required!'})
+            return res.status(400).json({ message:'Email is required!'})
         }
         if(!password){
-            return res.status(404).json({ message:'Password is required!'})
+            return res.status(400).json({ message:'Password is required!'})
         }
 
         // const userAggregation = await USER.aggregate([
@@ -238,7 +238,7 @@ export const getAllUser = async(req,res,next)=>{
 
       const branchData = await BRANCH.findOne(filter);
       if (!branchData) {
-          return res.status(404).json({ message: "No matching branch found!" });
+          return res.status(400).json({ message: "No matching branch found!" });
       }
 
       const users = await USER.find({
@@ -303,7 +303,7 @@ export const updateUser = async (req, res, next) => {
     }
 
     const userData = await USER.findById(userId);
-    if (!userData) return res.status(404).json({ message: "No User found!" });
+    if (!userData) return res.status(400).json({ message: "No User found!" });
 
     // if (!branchIds || !Array.isArray(branchIds) || branchIds.length === 0) {
     //   return res.status(400).json({ message: "Branch Ids are required!" });
@@ -314,7 +314,7 @@ export const updateUser = async (req, res, next) => {
     if (emailTaken) return res.status(400).json({ message: "Email already in use!" });
 
     const emp = await EMPLOYEE.findOne({ _id: userData.employeeId });
-    if (!emp) return res.status(404).json({ message: "Employee not found!" });
+    if (!emp) return res.status(400).json({ message: "Employee not found!" });
 
     const updateData = {
       name,
@@ -389,7 +389,7 @@ export const deleteUser = async(req,res,next)=>{
   
         const branchData = await BRANCH.findOne(filter);
         if (!branchData) {
-            return res.status(404).json({ message: "No matching branch found!" });
+            return res.status(400).json({ message: "No matching branch found!" });
         }
 
         const userData = await USER.findById(userId);
