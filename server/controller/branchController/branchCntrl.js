@@ -116,8 +116,6 @@ export const getAllBranch = async(req,res,next)=>{
             return res.status(400).json({ message: "User not found!" });
         }
 
- 
-
         let branches = [];
 
         if (user.role === "BranchAdmin") {

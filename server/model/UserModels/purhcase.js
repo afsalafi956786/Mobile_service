@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const purchaseItemSchema = new mongoose.Schema(
   {
-    ingredientId: {
+    prodcutId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Ingredient",
+      ref: "Product",
       required: true,
     },
     price: {
@@ -38,18 +38,18 @@ const purchaseSchema = new mongoose.Schema(
       type:String,
       required: true,
     },
-    restaurantId: {
+    branchId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Restaurant",
+      ref: "Branch",
       required: true,
     },
     purchaseDate: {
       type: Date,
       required: true,
     },
-    vendorId: {
+    supplierId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Vendor",
+      ref: "Supplier",
       required: true,
     },
     paymentType: {
@@ -62,7 +62,7 @@ const purchaseSchema = new mongoose.Schema(
     purchaseStatus: {
         type: String,
         enum: ["Pending","Received","Cancelled"],
-        default: "Pending"
+        default: "Received"
       },
     invoiceNo: {
       type: String,
@@ -120,13 +120,13 @@ const purchaseSchema = new mongoose.Schema(
 );
 
 purchaseSchema.index(
-  { purchaseId: 1, restaurantId: 1, isDeleted: 1 },
+  { purchaseId: 1, branchId: 1, isDeleted: 1 },
   { unique: true, partialFilterExpression: { isDeleted: false } }
 );
 purchaseSchema.index({ _id: 1, isDeleted: 1 });
-purchaseSchema.index({ restaurantId: 1, isDeleted: 1 });
-purchaseSchema.index({ vendorId: 1, restaurantId: 1, isDeleted: 1 });
-purchaseSchema.index({ purchaseDate: 1, restaurantId: 1, isDeleted: 1 });
+purchaseSchema.index({ barnchId: 1, isDeleted: 1 });
+purchaseSchema.index({ supplierId: 1, barnchId: 1, isDeleted: 1 });
+purchaseSchema.index({ purchaseDate: 1, barnchId: 1, isDeleted: 1 });
 
 const Purchase = mongoose.model("Purchase", purchaseSchema);
 export default Purchase;

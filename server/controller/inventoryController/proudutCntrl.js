@@ -223,7 +223,12 @@ export const createProduct = async (req, res, next) => {
       const product = await PRODUCT.findOne({
         _id:productId,
         isDeleted: false,
-      }).sort({ createdAt: -1 });
+      }).populate([
+        { path: 'brandId', select: 'name' },
+        { path: 'categoryId', select: 'name' },
+        { path: 'modelId', select: 'name' },
+      ])
+      .sort({ createdAt: -1 });
   
       return res.status(200).json({
         data: product,
