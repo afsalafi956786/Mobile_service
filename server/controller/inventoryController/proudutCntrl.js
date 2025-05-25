@@ -198,8 +198,22 @@ export const createProduct = async (req, res, next) => {
       const products = await PRODUCT.find({
         branchId,
         isDeleted: false,
-      }).sort({ createdAt: -1 });
-      console.log(products,'prod')
+      }).sort({ createdAt: -1 })
+      .populate([
+        {
+          path: 'modelId',
+          select: 'name'
+        },
+        {
+          path: 'brandId',
+          select: 'name'
+        },
+        {
+          path: 'categoryId',
+          select: 'name'
+        }
+      ])
+    
   
       return res.status(200).json({
         data: products,

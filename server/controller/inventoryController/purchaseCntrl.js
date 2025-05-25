@@ -143,7 +143,7 @@ export const generatePurchaseId = () => {
           supplierId,
           paymentType,
           paymentStatus,
-          purchaseStatus: "Recieved",
+          purchaseStatus:"Recieved",
           invoiceNo: invoiceNo || null,
           items,
           attachFile:documentURL ||null,
@@ -180,7 +180,6 @@ export const generatePurchaseId = () => {
       });
 
     } else if (paidAmount > grandTotal) {
-      console.log('debit pad andi')
       // Restaurant overpaid
       const debitIncrease = paidAmount - grandTotal;
       supplier.wallet.debit  = existingDebit  + debitIncrease;
@@ -225,6 +224,54 @@ export const generatePurchaseId = () => {
     return res.status(200).json({
       message: "Purchase Added successfully!",
       data: purchase,
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+export const getAllPurchases = async (req, res, next) => {
+  try {
+   
+    const { branchId } = req.params;
+
+    
+     const userId = req.user;
+    // Validate user
+    const user = await USER.findOne({ _id: userId, isDeleted: false });
+    if (!user) {
+      return res.status(400).json({ message: "User not found!" });
+    }
+
+    if (!branchId) {
+      return res.status(400).json({ message: "Branch Id is required!" });
+    }
+
+    let dataFilter = { branchId, purchaseStatus: "Received", isDeleted: false };
+
+    let filter = {};
+    if (user.role === "BranchAdmin") {
+        filter = { _id: branchId, branchAdminId: user._id };
+    } else if (user.role === "User") {
+        filter = { _id: branchId };
+    } else {
+        return res.status(403).json({ message: "Unauthorized!" });
+    }
+
+    const branchData = await BRANCH.findOne(filter);
+    if (!branchData) {
+        return res.status(404).json({ message: "No matching branch found!" });
+    }
+
+    const purchases = await PURCHASE.find(dataFilter)
+      .sort({ createdAt: -1 })
+      .populate("supplierId", "name")
+
+  
+    return res.status(200).json({
+      data: purchases,
     });
 
   } catch (err) {
@@ -314,10 +361,24 @@ export const getAllOutofStock = async (req, res, next) => {
     const outOfStockItems = await PRODUCT.find({
       branchId,
       isDeleted: false,
-      stockCount: { $lte: 0 } // Less than or equal to 0
+      stockCount: { $lte: 0 } 
     })
     .select('_id name stockCount') // Only include these fields
-    .sort({ stockCount: 1 }); // Sort by stockCount (ascending)
+    .sort({ stockCount: 1 })
+    .populate([
+      {
+        path: 'modelId',
+        select: 'name'
+      },
+      {
+        path: 'brandId',
+        select: 'name'
+      },
+      {
+        path: 'categoryId',
+        select: 'name'
+      }
+    ])
 
     return res.status(200).json({
       data: outOfStockItems
