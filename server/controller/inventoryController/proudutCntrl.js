@@ -118,6 +118,7 @@ export const createProduct = async (req, res, next) => {
       // Check for duplicate model
       const existingProduct = await PRODUCT.findOne({
         modelId,
+        name,
         branchId: { $in: branchIds },
         isDeleted: false, // if soft delete is implemented
       });
