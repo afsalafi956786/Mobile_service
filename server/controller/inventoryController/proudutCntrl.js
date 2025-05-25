@@ -4,7 +4,8 @@ import PRODUCT from '../../model/UserModels/product.js';
 import UNIT from '../../model/UserModels/unit.js';
 import BRAND from '../../model/UserModels/brand.js'
 import MODEL from '../../model/UserModels/model.js'
-import CATEGORY from '../../model/UserModels/category.js'
+import CATEGORY from '../../model/UserModels/category.js';
+import STOCK_LEDGER from '../../model/UserModels/stockLedger.js'
 
 
 
@@ -135,6 +136,7 @@ export const createProduct = async (req, res, next) => {
         baseUnit,
         categoryId,
         price : variants && variants.length > 0 ? null : price,
+        costPrice: variants && variants.length > 0 ? null : costPrice,
         color: variants && variants.length > 0 ? null : color,
         variants: variants || [],
         brandId,
@@ -148,6 +150,52 @@ export const createProduct = async (req, res, next) => {
       }));
   
       const created = await PRODUCT.insertMany(productData);
+
+     // Insert initial stock into StockLedger if stockCount > 0
+     const stockLedgerData = [];
+
+     
+for (const product of created) {
+  // For simple products (no variants)
+  if (!product.variants || product.variants.length === 0) {
+    if (product.stockCount > 0) {
+      stockLedgerData.push({
+        productId: product._id,
+        branchId: product.branchId,
+        quantity: product.stockCount,
+        remainingQty: product.stockCount,
+        costPrice: product.costPrice || 0, // You can later update this if needed
+        purchaseUnit: product.purchaseUnit,
+        createdById: user.createdById,
+        createdBy: user.name,
+        type: 'opening',
+      });
+    }
+  } else {
+    // For products with variants
+    for (const variant of product.variants) {
+      if (variant.stockCount > 0) {
+        stockLedgerData.push({
+          productId: product._id,
+          branchId: product.branchId,
+          variantName: variant.variantName,
+          quantity: variant.stockCount,
+          remainingQty: variant.stockCount,
+          costPrice: variant.costPrice || 0,
+          purchaseUnit: variant.purchaseUnit || product.purchaseUnit,
+          createdById: user.createdById,
+          createdBy: user.createdBy,
+          type: 'opening',
+        });
+      }
+    }
+  }
+}
+
+if (stockLedgerData.length > 0) {
+  await STOCK_LEDGER.insertMany(stockLedgerData);
+}
+
   
       return res.status(200).json({
         message: "Products added successfully!",

@@ -6,7 +6,8 @@ import SUPPLIER from '../../model/UserModels/supplier.js';
 import PURCHASE from '../../model/UserModels/purhcase.js'
 import SUPPLIERWALLET from '../../model/UserModels/supplierWallet.js';
 import PRODUCT from '../../model/UserModels/product.js';
-import CATEGORY from '../../model/UserModels/category.js'
+import CATEGORY from '../../model/UserModels/category.js';
+import STOCK_LEDGER from '../../model/UserModels/stockLedger.js'
 
 
 
@@ -229,6 +230,23 @@ export const generatePurchaseId = () => {
       }
 
       await product.save();
+
+
+      await STOCK_LEDGER.create({
+        productId: item.productId,
+        variantName: item.variantName || null,
+        branchId: branchId,
+        type: "purchase",
+        quantity: quantityInBaseUnit,
+        remainingQty: quantityInBaseUnit,
+        costPrice: item.price,
+        purchaseUnit: item.purchaseUnit,
+        purchaseDate: purchaseDate || new Date(),
+        createdById: userId,
+        createdBy: user.name,
+      })
+
+
     }
 
     return res.status(200).json({

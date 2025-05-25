@@ -39,6 +39,7 @@ const productSchema = new mongoose.Schema(
 
     //  Fields for non-variant (simple) products
     price: { type: Number, default: null },
+    costPrice: { type: Number, default: null },
     color: { type: String, default: null },
     stockCount: { type: Number, default: 0 },
     purchaseUnit: { type: String, default: null },
