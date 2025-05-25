@@ -212,13 +212,23 @@ export const generatePurchaseId = () => {
         isDeleted: false,
       });
 
-      if (product) {
-        const quantityInBaseUnit = item.quantity * item.conversionRate;
-        product.stockCount += quantityInBaseUnit;
-        await product.save();
-      }else{                                                    
-        return res.status(400).json({ message:'Somthing went wrong!'})
+      if (!product) {
+        return res.status(400).json({ message: "Product not found!" });
       }
+
+      const quantityInBaseUnit = item.quantity * item.conversionRate;
+
+      if (item.variantId) {
+        const variant = product.variants.id(item.variantId);
+        if (!variant) {
+          return res.status(400).json({ message: "Variant not found for this product!" });
+        }
+        variant.stockCount = (variant.stockCount || 0) + quantityInBaseUnit;
+      } else {
+        product.stockCount = (product.stockCount || 0) + quantityInBaseUnit;
+      }
+
+      await product.save();
     }
 
     return res.status(200).json({
@@ -314,14 +324,24 @@ export const getAllStocks = async (req, res, next) => {
         return res.status(404).json({ message: "No matching branch found!" });
     }
 
-    const products = await PRODUCT.find({
+    const allProducts = await PRODUCT.find({
       branchId,
-      isDeleted: false,
-      stockCount: { $gt: 0 }
+      isDeleted: false
     }).sort({ createdAt: -1 });
 
+    // Filter products that either have stockCount > 0 or any variant with stockCount > 0
+    const filteredProducts = allProducts.filter(product => {
+      if (product.stockCount > 0) return true;
+
+      if (product.variants && product.variants.length > 0) {
+        return product.variants.some(variant => variant.stockCount > 0);
+      }
+
+      return false;
+    });
+
     return res.status(200).json({
-      data: products,
+      data: filteredProducts,
     });
   } catch (err) {
     next(err);
@@ -358,28 +378,31 @@ export const getAllOutofStock = async (req, res, next) => {
         return res.status(404).json({ message: "No matching branch found!" });
     }
     // Fetch out-of-stock items (stockCount ≤ 0) with only required fields
-    const outOfStockItems = await PRODUCT.find({
+    const allProducts = await PRODUCT.find({
       branchId,
-      isDeleted: false,
-      stockCount: { $lte: 0 } 
+      isDeleted: false
     })
-    .select('_id name stockCount') // Only include these fields
-    .sort({ stockCount: 1 })
-    .populate([
-      {
-        path: 'modelId',
-        select: 'name'
-      },
-      {
-        path: 'brandId',
-        select: 'name'
-      },
-      {
-        path: 'categoryId',
-        select: 'name'
-      }
-    ])
+      .select('_id name stockCount variants modelId brandId categoryId')
+      .sort({ createdAt: -1 })
+      .populate([
+        { path: 'modelId', select: 'name' },
+        { path: 'brandId', select: 'name' },
+        { path: 'categoryId', select: 'name' }
+      ]);
 
+    // Step 2: Filter products where:
+    // - product.stockCount <= 0
+    // - and all variants (if exist) have stockCount <= 0
+    const outOfStockItems = allProducts.filter(product => {
+      const productLevelOutOfStock = product.stockCount <= 0;
+
+      const allVariantsOutOfStock = product.variants?.length
+        ? product.variants.every(variant => variant.stockCount <= 0)
+        : true;
+
+      return productLevelOutOfStock && allVariantsOutOfStock;
+    });
+``
     return res.status(200).json({
       data: outOfStockItems
     });

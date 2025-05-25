@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
-    // ✅ Optional variant array
+    //  Optional variant array
     variants: [
       {
         variantName: { type: String },
@@ -37,7 +37,7 @@ const productSchema = new mongoose.Schema(
       },
     ],
 
-    // ✅ Fields for non-variant (simple) products
+    //  Fields for non-variant (simple) products
     price: { type: Number, default: null },
     color: { type: String, default: null },
     stockCount: { type: Number, default: 0 },
@@ -46,14 +46,14 @@ const productSchema = new mongoose.Schema(
     conversionRate: { type: Number, default: 1 },
     minStockAlert: { type: Number, default: 0 },
 
-    // ✅ Audit info
+    //  Audit info
     createdById: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
     },
     createdBy: { type: String },
 
-    // ✅ Soft delete
+    //  Soft delete
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
     deletedById: {

@@ -89,7 +89,7 @@ export const createProduct = async (req, res, next) => {
       
       if (Array.isArray(variants)) {
         for (const p of variants) {
-          if (!p.variantName || p.price === undefined || !p.color) {
+          if (!p.variantName || p.price === undefined || !p.color || !purchaseUnit || !minStockAlert ) {
             return res
               .status(400)
               .json({ message: "Each Variants must include a variant name,price and color" });
