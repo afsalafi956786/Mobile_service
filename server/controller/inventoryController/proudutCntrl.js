@@ -77,15 +77,15 @@ export const createProduct = async (req, res, next) => {
 
 
       
-      if (
-        conversionRate === undefined ||
-        conversionRate === null ||
-        isNaN(Number(conversionRate))
-      ) {
-        return res
-          .status(400)
-          .json({ message: "Valid conversion rate is required!" });
-      }
+      // if (
+      //   conversionRate === undefined ||
+      //   conversionRate === null ||
+      //   isNaN(Number(conversionRate))
+      // ) {
+      //   return res
+      //     .status(400)
+      //     .json({ message: "Valid conversion rate is required!" });
+      // }
 
       
       if (Array.isArray(variants)) {
