@@ -12,6 +12,7 @@ import CATEGORY from '../../model/UserModels/category.js'
 export const createProduct = async (req, res, next) => {
     try {
       const {
+        name,
         branchIds,
         brandId,
         modelId,
@@ -39,6 +40,10 @@ export const createProduct = async (req, res, next) => {
         return res
           .status(400)
           .json({ message: "Restaurant IDs are required!" });
+      }
+
+      if(!name){
+        return res.status(400).json({ message: "product name is required!" });
       }
       
       if (!purchaseUnit) {
@@ -125,6 +130,7 @@ export const createProduct = async (req, res, next) => {
 
   
       const productData = branchs.map((branch) => ({
+        name,
         purchaseUnit,
         baseUnit,
         categoryId,
@@ -245,6 +251,7 @@ export const createProduct = async (req, res, next) => {
   export const updateProduct = async (req, res, next) => {
     try {
       const {
+        name,
         productId,
         branchId,
         brandId,
@@ -269,6 +276,10 @@ export const createProduct = async (req, res, next) => {
       const user = await USER.findOne({ _id: userId, isDeleted: false });
       if (!user) {
         return res.status(400).json({ message: "User not found!" });
+      }
+
+      if(!name){
+        return res.status(400).json({ message: "Product name is required!" });
       }
   
       if (!branchId) {
@@ -362,6 +373,7 @@ export const createProduct = async (req, res, next) => {
       const updatedProduct = await PRODUCT.findByIdAndUpdate(
         productId,
         {
+          name,
           purchaseUnit,
           baseUnit,
           categoryId,
