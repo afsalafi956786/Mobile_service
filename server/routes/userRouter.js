@@ -6,7 +6,7 @@ import { createBranch,getAllBranch,updateBranch,deleteBranch } from '../controll
 import {  createBrand,getAllBrands,deleteBrand,updateBrand,createModel,getAllModels,updateModel,deleteModel,getModelByBrand } from '../controller/branchController/brand_modelCntrl.js'
 import { createSupplier,updateSupplier,getAllSuppliers,deleteSupplier } from '../controller/inventoryController/supplierCntrls.js';
 import { createUnitMeasurement,updateUnitMeasurement,getAllUnits,deleteUnits } from '../controller/inventoryController/unitCntrl.js';
-import { createPurchase } from '../controller/inventoryController/purchaseCntrl.js'
+import { createPurchase ,getAllStocks,getAllOutofStock} from '../controller/inventoryController/purchaseCntrl.js'
 import { createProduct,getAllProducts,getOneProduct,updateProduct,deleteProduct,createCategory,getAllCategories,updateCategory,deleteCategory } from '../controller/inventoryController/proudutCntrl.js'
 
 import upload from '../middleware/multer.js';
@@ -96,6 +96,12 @@ router.delete('/product/:productId',VerifyToken,deleteProduct)
 
 //purchase
 router.post('/purchase',VerifyToken,createPurchase);
+
+
+
+//stock
+router.get('/stock/:branchId',VerifyToken,getAllStocks);
+router.get('/out-stock/:branchId',VerifyToken,getAllOutofStock)
 
 
 

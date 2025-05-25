@@ -68,7 +68,7 @@ export const generatePurchaseId = () => {
 
     for (const item of items) {
       if (!item.productId) {
-        return res.status(400).json({ message: "Ingredient ID is required for each item!" });
+        return res.status(400).json({ message: "Product ID is required for each item!" });
       }
       if (item.price == null) {
         return res.status(400).json({ message: "Price is required for each item!" });
@@ -76,9 +76,9 @@ export const generatePurchaseId = () => {
       if (!item.purchaseUnit) {
         return res.status(400).json({ message: "Purchase unit is required for each item!" });
       }
-      if (!item.baseUnit) {
-          return res.status(400).json({ message: "Base unit is required for each item!" });
-        }
+      // if (!item.baseUnit) {
+      //     return res.status(400).json({ message: "Base unit is required for each item!" });
+      //   }
       if (!item.conversionRate) {
           return res.status(400).json({ message: "Conversion rate is required for each item!" });
         }
@@ -159,13 +159,13 @@ export const generatePurchaseId = () => {
         })
 
     
-    const existingCredit = suplier.wallet?.credit || 0;
-    const existingDebit  = suplier.wallet?.debit  || 0;
+    const existingCredit = supplier.wallet?.credit || 0;
+    const existingDebit  = supplier.wallet?.debit  || 0;
     
     if (grandTotal > paidAmount) {
       // Vendor gave goods on credit
       const creditIncrease = grandTotal - paidAmount;
-      suplier.wallet.credit = existingCredit + creditIncrease;
+      supplier.wallet.credit = existingCredit + creditIncrease;
 
       await SUPPLIERWALLET.create({
         supplierId,
@@ -215,7 +215,7 @@ export const generatePurchaseId = () => {
 
       if (product) {
         const quantityInBaseUnit = item.quantity * item.conversionRate;
-        ingredient.stockCount += quantityInBaseUnit;
+        product.stockCount += quantityInBaseUnit;
         await product.save();
       }else{                                                    
         return res.status(400).json({ message:'Somthing went wrong!'})
@@ -234,49 +234,95 @@ export const generatePurchaseId = () => {
 
 
 
-export const getPendingPurchase = async (req, res, next) => {
-  try {
-   
-    const { restaurantId } = req.params;
 
-    
-     const userId = req.user;
-    // Validate user
+
+
+
+export const getAllStocks = async (req, res, next) => {
+  try {
+    const { branchId } = req.params;
+    const userId = req.user;
+
+    if (!branchId) {
+      return res.status(400).json({ message: "Branch Id is required!" });
+    }
+
     const user = await USER.findOne({ _id: userId, isDeleted: false });
     if (!user) {
       return res.status(400).json({ message: "User not found!" });
     }
 
-    if (!restaurantId) {
-      return res.status(400).json({ message: "Restaurant Id is required!" });
-    }
-
-    let dataFilter = { restaurantId, purchaseStatus: "Pending", isDeleted: false };
-
+    // Permission check
     let filter = {};
-    if (user.role === "CompanyAdmin") {
-      filter = { _id: restaurantId, companyAdmin: user._id };
+    if (user.role === "BranchAdmin") {
+        filter = { _id: branchId, branchAdminId: user._id };
     } else if (user.role === "User") {
-      filter = { _id: restaurantId };
+        filter = { _id: branchId };
     } else {
-      return res.status(403).json({ message: "Unauthorized!" });
+        return res.status(403).json({ message: "Unauthorized!" });
     }
 
-    const restaurant = await RESTAURANT.findOne(filter);
-    if (!restaurant)   return res.status(404).json({ message: "No matching restaurants found!" });
+    const branchData = await BRANCH.findOne(filter);
+    if (!branchData) {
+        return res.status(404).json({ message: "No matching branch found!" });
+    }
 
-    const purchases = await PURCHASE.find(dataFilter)
-      .sort({ createdAt: -1 })
-      .populate("vendorId", "vendorName")
-
+    const products = await PRODUCT.find({
+      branchId,
+      isDeleted: false,
+      stockCount: { $gt: 0 }
+    }).sort({ createdAt: -1 });
 
     return res.status(200).json({
-      data: purchases,
+      data: products,
     });
-  
-      
-          
-      } catch (err) {
-          next(err)
-      }
+  } catch (err) {
+    next(err);
   }
+};
+
+
+export const getAllOutofStock = async (req, res, next) => {
+  try {
+    const { branchId } = req.params;
+    const userId = req.user;
+
+    if (!branchId) {
+      return res.status(400).json({ message: "Branch Id is required!" });
+    }
+
+    const user = await USER.findOne({ _id: userId, isDeleted: false });
+    if (!user) {
+      return res.status(400).json({ message: "User not found!" });
+    }
+
+    // Permission check
+    let filter = {};
+    if (user.role === "BranchAdmin") {
+        filter = { _id: branchId, branchAdminId: user._id };
+    } else if (user.role === "User") {
+        filter = { _id: branchId };
+    } else {
+        return res.status(403).json({ message: "Unauthorized!" });
+    }
+
+    const branchData = await BRANCH.findOne(filter);
+    if (!branchData) {
+        return res.status(404).json({ message: "No matching branch found!" });
+    }
+    // Fetch out-of-stock items (stockCount ≤ 0) with only required fields
+    const outOfStockItems = await PRODUCT.find({
+      branchId,
+      isDeleted: false,
+      stockCount: { $lte: 0 } // Less than or equal to 0
+    })
+    .select('_id name stockCount') // Only include these fields
+    .sort({ stockCount: 1 }); // Sort by stockCount (ascending)
+
+    return res.status(200).json({
+      data: outOfStockItems
+    });
+  } catch (err) {
+    next(err);
+  }
+};

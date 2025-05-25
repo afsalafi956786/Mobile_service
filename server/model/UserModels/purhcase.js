@@ -14,9 +14,6 @@ const purchaseItemSchema = new mongoose.Schema(
     purchaseUnit: {
       type: String,
     },
-    baseUnit:{
-      type:String,
-    },
     quantity: {
       type: Number,
       required: true,
@@ -61,7 +58,6 @@ const purchaseSchema = new mongoose.Schema(
     },
     purchaseStatus: {
         type: String,
-        enum: ["Pending","Received","Cancelled"],
         default: "Received"
       },
     invoiceNo: {
