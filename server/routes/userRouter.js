@@ -1,5 +1,5 @@
 import express from 'express'
-import { LoginUser,registerBranch,createUser,getAllUser,getOneUser,updateUser,deleteUser } from '../controller/userController/user.js';
+import { LoginUser,registerBranch,createUser,getAllUser,getOneUser,updateUser,deleteUser ,getOneUserDetails} from '../controller/userController/user.js';
 import  {  createDepartment,getAllDepartment,updateDepartment,deleteDepartment,createPosition,getAllPositions,updatePosition, deletePosition,getPositionByDepartment } from '../controller/employeeController/employeeCntrl.js'
 import { VerifyToken } from '../middleware/jwt.js'
 import { createBranch,getAllBranch,updateBranch,deleteBranch } from '../controller/branchController/branchCntrl.js';
@@ -59,6 +59,7 @@ router.get('/model-id/:brandId',VerifyToken,getModelByBrand)
 router.post('/user',VerifyToken,createUser);
 router.get('/user/:branchId',VerifyToken,getAllUser);
 router.get('/user-data/:userId',VerifyToken,getOneUser);
+router.get('/user-details',VerifyToken,getOneUserDetails)
 router.put('/user',VerifyToken,updateUser);
 router.delete('/user',VerifyToken,deleteUser);
 
@@ -96,13 +97,19 @@ router.delete('/product/:productId',VerifyToken,deleteProduct)
 
 //purchase
 router.post('/purchase',VerifyToken,upload.single('document'),createPurchase);
-router.get('/purchase',VerifyToken,getAllPurchases)
+router.get('/purchase',VerifyToken,getAllPurchases);
+router.get('/purchase/:purchaseId',VerifyToken,)
+router.post('/purcahse/return',VerifyToken,upload.single('document'),purchaseReturn)
 
 
 
 //stock
 router.get('/stock/:branchId',VerifyToken,getAllStocks);
-router.get('/out-stock/:branchId',VerifyToken,getAllOutofStock)
+router.get('/out-stock/:branchId',VerifyToken,getAllOutofStock);
+
+
+
+
 
 
 

@@ -7,6 +7,21 @@ const purchaseItemSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
+    brandId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:"Brand",
+      default:null
+    },
+    modelId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:"Model",
+      default:null
+    },
+
+    variantId:{
+      type:String,
+      default:null
+    },
     price: {
       type: Number,
       required: true,
