@@ -6,7 +6,7 @@ import { createBranch,getAllBranch,updateBranch,deleteBranch } from '../controll
 import {  createBrand,getAllBrands,deleteBrand,updateBrand,createModel,getAllModels,updateModel,deleteModel,getModelByBrand } from '../controller/branchController/brand_modelCntrl.js'
 import { createSupplier,updateSupplier,getAllSuppliers,deleteSupplier } from '../controller/inventoryController/supplierCntrls.js';
 import { createUnitMeasurement,updateUnitMeasurement,getAllUnits,deleteUnits } from '../controller/inventoryController/unitCntrl.js';
-import { createPurchase ,getAllStocks,getAllOutofStock, getAllPurchases,purchaseReturn} from '../controller/inventoryController/purchaseCntrl.js'
+import { createPurchase ,getAllStocks,getAllOutofStock, getAllPurchases,purchaseReturn, getOnePurchase,getOneReturnPurchase} from '../controller/inventoryController/purchaseCntrl.js'
 import { createProduct,getAllProducts,getOneProduct,updateProduct,deleteProduct,createCategory,getAllCategories,updateCategory,deleteCategory } from '../controller/inventoryController/proudutCntrl.js'
 
 import upload from '../middleware/multer.js';
@@ -98,8 +98,9 @@ router.delete('/product/:productId',VerifyToken,deleteProduct)
 //purchase
 router.post('/purchase',VerifyToken,upload.single('document'),createPurchase);
 router.get('/purchase',VerifyToken,getAllPurchases);
-router.get('/purchase/:purchaseId',VerifyToken,)
-router.post('/purcahse/return',VerifyToken,upload.single('document'),purchaseReturn)
+router.get('/purchase/:purchaseId',VerifyToken,getOnePurchase)
+router.post('/purcahse/return',VerifyToken,upload.single('document'),purchaseReturn);
+router.get('/purchase/return/:branchId',VerifyToken,getOneReturnPurchase)
 
 
 

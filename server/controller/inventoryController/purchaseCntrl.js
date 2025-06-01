@@ -385,7 +385,7 @@ export const getOnePurchase = async (req, res, next) => {
     }
 
 
-    const purchases = await PURCHASE.findById(purchaseId)
+    const purchase = await PURCHASE.findById(purchaseId)
       .sort({ createdAt: -1 })
       .populate("supplierId", "name")
       .populate("branchId","companyName")
@@ -394,13 +394,48 @@ export const getOnePurchase = async (req, res, next) => {
 
   
     return res.status(200).json({
-      data: purchases,
+      data: purchase,
     });
 
   } catch (err) {
     next(err);
   }
 };
+
+
+export const  getOneReturnPurchase = async(req,res,next)=>{
+  try{
+
+
+    const { purchaseId } = req.params;
+    const userId = req.user;
+
+    if (!purchaseId) {
+      return res.status(400).json({ message: "Purchase ID is required!" });
+    }
+    
+    // Validate user
+    const user = await USER.findOne({ _id: userId, isDeleted: false });
+    if (!user) {
+      return res.status(400).json({ message: "User not found!" });
+    }
+
+    
+
+
+
+
+
+
+
+
+
+
+
+  }catch(err){
+    next(err);
+  }
+}
 
 
 
@@ -787,3 +822,39 @@ await supplier.save();
     next(err);
   }
 };
+
+
+export const getReturnedPurchase = async(req,res,next)=>{
+  try {
+
+    const { branchId } = req.params;
+    const userId = req.user;
+
+    // Validate user
+    const user = await USER.findOne({ _id: userId, isDeleted: false });
+    if (!user) {
+      return res.status(400).json({ message: "User not found!" });
+    }
+
+    if(!branchId){
+      return res.status(404).json({ message: "Branch Id  not found!" });
+    }
+
+    const purchase = await PURCHASERETURN.find({ restaurantId, isDeleted:false }).sort({createdAt:-1})
+    .populate("purchaseId","purchaseDate paymentStatus refundDue")
+    .populate("supplierId", "name mobileNo address")
+    .populate("brandId","name")
+    .populate("modelId","name")
+    .populate("branch","companyName")
+    
+    if (!purchase) {
+      return res.status(404).json({ message: "Purchase not found!" });
+    }
+
+    return res.status(200).json({ data: purchase })
+
+  } catch (err) {
+    
+  }
+
+}

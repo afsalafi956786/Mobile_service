@@ -54,6 +54,8 @@ export const  createBranch = async (req,res,next)=>{
         }
 
            let branchAdminid = user._id;
+           //add userId to user.branchIds array
+
               let logoPath = null;
 
 
@@ -93,6 +95,12 @@ export const  createBranch = async (req,res,next)=>{
             currencySymbol,
             branchAdminId: branchAdminid
         });
+
+        await USER.findByIdAndUpdate(
+            user._id,
+            { $push: { branchIds: branch._id } },
+            { new: true } // optional: returns updated document
+          );
     
 
         return res.status(201).json({ message: "Branch created successfully",data: branch });

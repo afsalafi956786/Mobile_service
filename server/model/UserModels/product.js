@@ -37,6 +37,7 @@ const productSchema = new mongoose.Schema(
         purchaseUnit: { type: String },
         baseUnit: { type: String },
         conversionRate: { type: Number, default: 1 },
+        costPrice: { type: Number, default: null },
         minStockAlert: { type: Number, default: 0 },
       },
     ],

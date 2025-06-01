@@ -10,6 +10,16 @@ const itemSchema = new mongoose.Schema({
     type:String,
     default:null
   },
+  brandId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref:"Brand",
+    default:null
+  },
+  modelId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref:"Model",
+    default:null
+  },
   quantity: {
     type: Number,
     required: true,

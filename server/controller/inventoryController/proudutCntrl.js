@@ -23,6 +23,7 @@ export const createProduct = async (req, res, next) => {
         price,
         purchaseUnit,
         baseUnit,
+        costPrice,
         conversionRate,
         stockCount,
         minStockAlert,
