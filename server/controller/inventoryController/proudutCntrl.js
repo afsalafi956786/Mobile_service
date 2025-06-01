@@ -209,9 +209,6 @@ if (stockLedgerData.length > 0) {
   };
 
 
-
-  
-
   export const getAllProducts = async (req, res, next) => {
     try {
       const { branchId } = req.params;
@@ -225,8 +222,6 @@ if (stockLedgerData.length > 0) {
       if (!user) {
         return res.status(400).json({ message: "User not found!" });
       }
-
-      console.log(branchId,'b')
   
       // Permission check
       let filter = {};

@@ -97,8 +97,8 @@ router.delete('/product/:productId',VerifyToken,deleteProduct)
 
 //purchase
 router.post('/purchase',VerifyToken,upload.single('document'),createPurchase);
-router.get('/purchase',VerifyToken,getAllPurchases);
-router.get('/purchase/:purchaseId',VerifyToken,getOnePurchase)
+router.get('/purchase/:branchId',VerifyToken,getAllPurchases);
+router.get('/purchase/one/:purchaseId',VerifyToken,getOnePurchase)
 router.post('/purcahse/return',VerifyToken,upload.single('document'),purchaseReturn);
 router.get('/purchase/return/:branchId',VerifyToken,getOneReturnPurchase)
 

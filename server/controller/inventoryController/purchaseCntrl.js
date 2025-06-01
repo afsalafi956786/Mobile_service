@@ -353,8 +353,7 @@ export const getAllPurchases = async (req, res, next) => {
     const purchases = await PURCHASE.find(dataFilter)
       .sort({ createdAt: -1 })
       .populate("supplierId", "name")
-      .populate('brandId',"name")
-      .populate('modelId',"name")
+      .populate("branchId", "companyName")
 
   
     return res.status(200).json({
@@ -389,8 +388,6 @@ export const getOnePurchase = async (req, res, next) => {
       .sort({ createdAt: -1 })
       .populate("supplierId", "name")
       .populate("branchId","companyName")
-      .populate('brandId',"name")
-      .populate('modelId',"name")
 
   
     return res.status(200).json({
@@ -419,15 +416,6 @@ export const  getOneReturnPurchase = async(req,res,next)=>{
     if (!user) {
       return res.status(400).json({ message: "User not found!" });
     }
-
-    
-
-
-
-
-
-
-
 
 
 
